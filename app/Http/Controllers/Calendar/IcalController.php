@@ -8,7 +8,7 @@ use Illuminate\Http\Response;
 
 class IcalController extends Controller
 {
-	public function getCalendar($id:) {
+	public function getCalendar($id) {
 		$url = self::getUrl($id);
 
 		$data = Cache::get($id);
