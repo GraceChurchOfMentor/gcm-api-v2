@@ -15,15 +15,20 @@ class IcalController extends Controller
 
 		if ($data) {
 			return $data;
-		} else {
-			$data = file_get_contents($url);
-
-			Cache::put($id, $data, (60*24));
 		}
 
-		return response($data, 200)
-			->header('Content-Type', 'text/calendar; charset=utf-8')
-			->header('Content-Disposition', 'attachment; filename=calendar.ics');
+		try {
+			$data = file_get_contents($url);
+		} catch (Exception $e) {
+			echo "Could not retrieve file.";
+		} finally {
+			Cache::put($id, $data, (60*24));
+
+			return response($data, 200)
+				->header('Content-Type', 'text/calendar; charset=utf-8')
+				->header('Content-Disposition', 'inline; filename=calendar.ics');
+		}
+
 	}
 
 	public function forgetCalendar($id) {
