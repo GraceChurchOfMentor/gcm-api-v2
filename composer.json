@@ -1,5 +1,6 @@
 {
-    "name": "laravel/laravel",
+    "name": "gracechurchmentor/gcm-api",
+    "version": "2.0.0-alpha1",
     "description": "The Laravel Framework.",
     "keywords": ["framework", "laravel"],
     "license": "MIT",
