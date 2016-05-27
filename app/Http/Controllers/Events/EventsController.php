@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use App\Utils;
+use Storage;
 use Cache;
 use Log;
 
@@ -73,7 +74,7 @@ class EventsController extends Controller
         $cacheTime = 15;
         $cacheKey = "events-public-calendar-listing-" . base64_encode("$dateStart$dateEnd");
 
-        if ( ! Cache::tags(['events'])->has($cacheKey)) {
+        if ( ! Cache::tags('events')->has($cacheKey)) {
             $client = new Client([
                 'base_uri' => config('ccb.apiEndpointUri'),
             ]);
@@ -91,22 +92,29 @@ class EventsController extends Controller
                 ]
             ]);
 
-            $data = simplexml_load_string($response->getBody());
+            $data = (string) $response->getBody();
 
-            Cache::tags(['events'])->put($cacheKey, json_encode($data), $cacheTime);
+            Storage::put('ccb-events-most-recent.xml', $data);
+            Cache::tags('events')->put($cacheKey, $data, $cacheTime);
         }
 
-        $data = json_decode(Cache::tags(['events'])->get($cacheKey));
+        return self::formatRawListing(Cache::tags('events')->get($cacheKey));
+    }
 
-        return (object) [
+    private static function formatRawListing($xml) {
+        $data = simplexml_load_string($xml);
+
+        $data = (object) [
             'request' => (object) [],
             'parsed' => (object) [
-                'dateStart' => $dateStart,
-                'dateEnd' => $dateEnd,
+                'dateStart' => (string) $data->request->parameters->xpath('argument[@name="date_start"]')[0]->attributes()['value'],
+                'dateEnd' => (string) $data->request->parameters->xpath('argument[@name="date_end"]')[0]['value'],
             ],
             'count' => count($data->response->items->item),
-            'events' => $data->response->items->item,
+            'events' => $data->response->items->xpath('//item'),
         ];
+
+        return $data;
     }
 
     private static function outputEvents($events) {
@@ -200,9 +208,7 @@ class EventsController extends Controller
         $events->events = array_filter($events->events, function($e) use ($query) {
             $string = "";
             foreach ($e as $value) {
-                if (is_string($value)) {
-                    $string .= "$value ";
-                }
+                $string .= "$value ";
             }
 
             $string = html_entity_decode($string);
