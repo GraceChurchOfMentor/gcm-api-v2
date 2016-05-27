@@ -6,3 +6,5 @@ Homestead.json
 .env
 *.sublime-project
 *.sublime-workspace
+
+/config/ccb.php
