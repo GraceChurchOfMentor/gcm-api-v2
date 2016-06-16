@@ -1,17 +1,108 @@
 <?php
 
-namespace App\Http\Controllers\Events;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use GuzzleHttp\Psr7;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use App\Utils;
-use Storage;
 use Cache;
+use Carbon\Carbon;
 use Log;
 
-class EventsController extends Controller
+class BoxcastController extends Controller
 {
+    public $token = false;
+    public $client;
+
+    public function __construct() {
+        $this->token = $this->getToken();
+    }
+
+    public function getCountdown(Request $request, $channelId = false) {
+        $this->client = new Client([
+            'base_uri' => config('boxcast.apiEndpointUri'),
+        ]);
+
+        try {
+            $response = $this->client->get('/broadcasts', [
+                'query' => [
+                    'channel_id' => $channelId,
+                ]
+            ]);
+        } catch (ClientException $e) {
+            return response()->json([
+                'status' => 'failure',
+                'request' => Psr7\str($e->getRequest()),
+                'response' => Psr7\str($e->getResponse()),
+            ]);
+
+        }
+
+        $broadcasts = json_decode($response->getBody());
+
+        $broadcasts = array_filter($broadcasts, function($b) {
+            if (strtotime($b->stops_at) < strtotime('now')) {
+                return false;
+            }
+
+            return true;
+        });
+
+        if (empty($broadcasts)) {
+            return response()->json([
+                'status' => 'failure',
+            ]);
+        }
+
+        $broadcasts = array_values($broadcasts);
+
+        $next = $broadcasts[0];
+
+
+        $data = (object) array(
+            'status' => 'success',
+            'details' => $next,
+        );
+
+        return response()->json($data);
+    }
+
+    private function getToken() {
+        if ( ! Cache::tags('boxcast')->has('token')) {
+            $authBasicToken = base64_encode(config('boxcast.apiClientId') . ":" . config('boxcast.apiClientSecret'));
+
+            $this->client = new Client([
+                'base_uri' => config('boxcast.apiLoginEndpointUri'),
+            ]);
+
+            $response = $this->client->post('/oauth2/token', [
+                'headers' => [
+                    'Authorization' => "Basic $authBasicToken",
+                ],
+                'form_params' => [
+                    'grant_type' => "password",
+                    'username' => config('boxcast.accountUsername'),
+                    'password' => config('boxcast.accountPassword'),
+                ],
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                return false;
+            }
+
+            $data = json_decode($response->getBody()->getContents());
+
+            $expireTime = Carbon::now()->addSeconds($data->expires_in)->subMinutes(5);
+
+            Cache::tags('boxcast')->put('token', $data, $expireTime);
+        }
+
+        return Cache::tags('boxcast')->get('token');
+    }
+
     public function getEvents(Request $request, $featured = false) {
         /*
             // html view options

@@ -30,8 +30,11 @@ Route::group(['middleware' => ['web']], function () {
     //
 });
 
-Route::get('events/{featured?}', 'Events\EventsController@getEvents');
-Route::get('events/cache/clear', 'Events\EventsController@clearCache');
+Route::get('events/{featured?}', 'EventsController@getEvents');
+Route::get('events/cache/clear', 'EventsController@clearCache');
 
-Route::get('calendar/ical/get/{base64url}', 'Calendar\IcalController@getCalendar');
-Route::get('calendar/ical/forget/{base64url}', 'Calendar\IcalController@forgetCalendar');
+Route::get('calendar/ical/get/{base64url}', 'IcalController@getCalendar');
+Route::get('calendar/ical/forget/{base64url}', 'IcalController@forgetCalendar');
+
+Route::get('livestream/countdown/{channelId}', 'BoxcastController@getCountdown');
+Route::get('livestream/countdown', 'BoxcastController@getCountdown');

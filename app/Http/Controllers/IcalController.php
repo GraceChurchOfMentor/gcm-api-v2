@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Calendar;
+namespace App\Http\Controllers;
 
 use Cache;
 use Log;
