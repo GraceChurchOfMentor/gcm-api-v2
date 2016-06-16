@@ -8,3 +8,4 @@ Homestead.json
 *.sublime-workspace
 
 /config/ccb.php
+/config/boxcast.php
