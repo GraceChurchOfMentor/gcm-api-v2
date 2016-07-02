@@ -19,7 +19,7 @@ class EventsController extends Controller
             'trim'         => $this->get('trim')
          */
 
-        $result = $this->getRawListing($request->input('dateStart'), $request->input('dateEnd'), $request->input('timeframe'));
+        $result = $this->getRawListing($request->input('dateStart'), $request->input('dateEnd'), $request->input('timeframe'), $request->input('cacheForceUpdate'));
 
         if ($request->input('dateStart')) {
             $result->request->dateStart = $request->input('dateStart');
@@ -57,6 +57,10 @@ class EventsController extends Controller
             $result = self::filterCount($result, $request->input('count'));
         }
 
+        if ($request->input('cacheForceUpdate')) {
+            $result->request->cacheForceUpdate = $request->input('cacheForceUpdate');
+        }
+
         return self::outputEvents($result);
     }
 
@@ -66,15 +70,15 @@ class EventsController extends Controller
         return "Events cache cleared.";
     }
 
-    private function getRawListing($dateStart = FALSE, $dateEnd = FALSE, $timeframe = FALSE) {
+    private function getRawListing($dateStart = FALSE, $dateEnd = FALSE, $timeframe = FALSE, $cacheForceUpdate = FALSE) {
         $timeframe = $timeframe ? $timeframe : config('gcm.events.defaultTimeframe');
         $dateStart = Utils::normalizeTime($dateStart);
         $dateEnd = $dateEnd ? Utils::normalizeTime($dateEnd) : Utils::normalizeTime("$dateStart $timeframe");
 
-        $cacheTime = 15;
+        $cacheTime = 1440;
         $cacheKey = "events-public-calendar-listing-" . base64_encode("$dateStart$dateEnd");
 
-        if ( ! Cache::tags('events')->has($cacheKey)) {
+        if (( ! Cache::tags('events')->has($cacheKey)) || ($cacheForceUpdate == "1")) {
             $client = new Client([
                 'base_uri' => config('ccb.apiEndpointUri'),
             ]);
