@@ -126,6 +126,7 @@ class EventsController extends Controller
         array_walk($events->events, function(&$event) {
             if (substr($event->event_name, 0, 1) == "*") {
                 $event->event_name = preg_replace("/^\*[\s]*/", "", $event->event_name);
+                $event->gcm_featured = "featured";
             }
         });
 
