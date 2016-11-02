@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
+use App\Jobs\RetrieveEventCalendar;
 use App\Utils;
 use Storage;
 use Cache;
 use Log;
+use DateTime;
+use DateTimeZone;
 
 class EventsController extends Controller
 {
@@ -70,6 +73,18 @@ class EventsController extends Controller
         return "Events cache cleared.";
     }
 
+    public function dispatchRetrieveEventCalendar() {
+        $this->dispatch(new RetrieveEventCalendar());
+
+        return "Job finished.";
+    }
+
+    private function getRawListingNew() {
+        $data = json_decode(Storage::get('ccb-events-most-recent.json'));
+
+        return $data;
+    }
+
     private function getRawListing($dateStart = FALSE, $dateEnd = FALSE, $timeframe = FALSE, $cacheForceUpdate = FALSE) {
         $timeframe = $timeframe ? $timeframe : config('gcm.events.defaultTimeframe');
         $dateStart = Utils::normalizeTime($dateStart);
@@ -128,6 +143,12 @@ class EventsController extends Controller
                 $event->event_name = preg_replace("/^\*[\s]*/", "", $event->event_name);
                 $event->gcm_featured = "featured";
             }
+        });
+
+        // add unix epoch date strings
+        array_walk($events->events, function(&$event) {
+            $event->unix_start_time = (new DateTime($event->date . ' ' . $event->start_time, new DateTimeZone('America/New_York')))->format('U');
+            $event->unix_end_time = (new DateTime($event->date . ' ' . $event->end_time, new DateTimeZone('America/New_York')))->format('U');
         });
 
         $events = (object) [

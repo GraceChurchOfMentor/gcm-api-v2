@@ -30,8 +30,9 @@ Route::group(['middleware' => ['web']], function () {
     //
 });
 
-Route::get('events/{featured?}', 'EventsController@getEvents');
+Route::get('events/fetch', 'EventsController@dispatchRetrieveEventCalendar');
 Route::get('events/cache/clear', 'EventsController@clearCache');
+Route::get('events/{featured?}', 'EventsController@getEvents');
 
 Route::get('calendar/ical/get/{base64url}', 'IcalController@getCalendar');
 Route::get('calendar/ical/forget/{base64url}', 'IcalController@forgetCalendar');

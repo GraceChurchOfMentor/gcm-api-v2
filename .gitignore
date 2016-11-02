@@ -6,6 +6,7 @@ Homestead.json
 .env
 *.sublime-project
 *.sublime-workspace
+*.swp
 
 /config/ccb.php
 /config/boxcast.php
