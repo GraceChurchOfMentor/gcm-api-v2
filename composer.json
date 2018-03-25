@@ -8,7 +8,7 @@
     "require": {
         "php": ">=5.5.9",
         "laravel/framework": "5.2.*",
-        "guzzlehttp/guzzle": "~6.0",
+        "guzzlehttp/guzzle": "~6.3",
         "symfony/psr-http-message-bridge": "^0.2.0",
         "predis/predis": "^1.0"
     },

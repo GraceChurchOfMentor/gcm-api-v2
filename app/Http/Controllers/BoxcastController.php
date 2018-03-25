@@ -31,7 +31,7 @@ class BoxcastController extends Controller
                 $response = $this->client->send($request, [
                     'query' => [
                         'channel_id' => $channelId,
-                        'q' => "timeframe:$timeframe",
+                        'q' => "timeframe:$timeframe"
                     ]
                 ]);
             } catch (ClientException $e) {
