@@ -26,11 +26,13 @@ class BoxcastController extends Controller
 
         foreach (array('current', 'preroll', 'future') as $timeframe) {
             try {
-                $baseUri = config('boxcast.apiEndpointUri') . '/broadcasts';
+                $baseUri = config('boxcast.apiEndpointUri') . '/channels/' . $channelId . '/broadcasts';
                 $request = new Request('GET', $baseUri);
                 $response = $this->client->send($request, [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $this->token->access_token
+                    ],
                     'query' => [
-                        'channel_id' => $channelId,
                         'q' => "timeframe:$timeframe"
                     ]
                 ]);
