@@ -100,9 +100,8 @@ class BoxcastController extends Controller
                     'Authorization' => "Basic $authBasicToken",
                 ],
                 'form_params' => [
-                    'grant_type' => "password",
-                    'username' => config('boxcast.accountUsername'),
-                    'password' => config('boxcast.accountPassword'),
+                    'grant_type' => "client_credentials",
+                    'scope' => "owner",
                 ],
             ]);
 
