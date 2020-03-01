@@ -7,6 +7,3 @@ Homestead.json
 *.sublime-project
 *.sublime-workspace
 *.swp
-
-/config/ccb.php
-/config/boxcast.php
