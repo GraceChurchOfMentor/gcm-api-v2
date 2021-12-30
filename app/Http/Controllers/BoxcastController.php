@@ -20,7 +20,7 @@ class BoxcastController extends Controller
 
     public function __construct()
     {
-        $this->token = $this->getToken();
+        $this->token = $this->token();
     }
 
     public function getCountdown($channelId = false)
