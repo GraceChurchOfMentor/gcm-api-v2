@@ -3,22 +3,24 @@
 namespace App\Jobs;
 
 use App\Jobs\Job;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-// GCM-specific stuff
 use App\Utils;
-use GuzzleHttp\Client;
-use Carbon\Carbon;
-use Storage;
 use Cache;
+use Carbon\Carbon;
+// GCM-specific stuff
+use GuzzleHttp\Client;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Storage;
 
 class RetrieveEventCalendar extends Job implements ShouldQueue
 {
     use InteractsWithQueue, SerializesModels;
 
     private $timeZone;
+
     private $dateToday;
+
     private $ranges;
 
     /**
@@ -28,7 +30,7 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
      */
     public function __construct()
     {
-        $this->timeZone = "America/New_York";
+        $this->timeZone = 'America/New_York';
         $this->dateToday = Carbon::now($this->timeZone);
         $this->ranges = [];
 
@@ -43,7 +45,7 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
                 'dateStart'   => Carbon::create($m->year, $m->month, 01)->format('Y-m-d'),
                 'dateEnd'     => Carbon::create($m->year, $m->month, $m->daysInMonth)->format('Y-m-d'),
                 'partOfRange' => $r['description'],
-                'cacheMaxAge' => $r['cacheMaxAge']
+                'cacheMaxAge' => $r['cacheMaxAge'],
             ];
         }
     }
@@ -63,7 +65,7 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
             $cacheMaxAge = $r['cacheMaxAge'];
             $cacheKey = "ccb-public-calendar-listing-$dateStart-$dateEnd";
 
-            if ( ! Cache::tags('events')->has($cacheKey)) {
+            if (! Cache::tags('events')->has($cacheKey)) {
                 $data = json_decode(self::getEvents($r));
 
                 // add "last updated" property to each event
@@ -83,7 +85,8 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
         Storage::put('ccb-events-most-recent.json', json_encode($output));
     }
 
-    private static function getEvents($range) {
+    private static function getEvents($range)
+    {
         $client = new Client([
             'base_uri' => config('ccb.apiEndpointUri'),
         ]);
@@ -92,13 +95,13 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
             'auth' => [
                 config('ccb.apiUsername'),
                 config('ccb.apiPassword'),
-                'basic'
+                'basic',
             ],
             'query' => [
                 'srv' => 'public_calendar_listing',
                 'date_start' => $range['dateStart'],
                 'date_end' => $range['dateEnd'],
-            ]
+            ],
         ]);
 
         $xml = (string) $response->getBody();
@@ -108,7 +111,8 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
         return json_encode($events);
     }
 
-    private static function formatRawListing($xml) {
+    private static function formatRawListing($xml)
+    {
         $data = simplexml_load_string($xml);
         $output = (object) [
             'parsed' => (object) [
@@ -122,7 +126,8 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
         return $output;
     }
 
-    private static function parseRanges($ranges) {
+    private static function parseRanges($ranges)
+    {
         $low = 0;
         $high = 0;
 
@@ -138,7 +143,8 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
         return range($low, $high);
     }
 
-    private static function findInRanges($ranges, $num) {
+    private static function findInRanges($ranges, $num)
+    {
         foreach ($ranges as $r) {
             if (($num >= $r['rangeStart']) && ($num <= $r['rangeEnd'])) {
                 return $r;
