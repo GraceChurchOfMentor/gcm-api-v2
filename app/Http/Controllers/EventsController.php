@@ -95,7 +95,7 @@ class EventsController extends Controller
         $dateStart = Utils::normalizeTime($dateStart);
         $dateEnd = $dateEnd ? Utils::normalizeTime($dateEnd) : Utils::normalizeTime("$dateStart $timeframe");
 
-        $cacheTime = 1440;
+        $cacheTime = now()->addHours(24);
         $cacheKey = 'events-public-calendar-listing-'.base64_encode("$dateStart$dateEnd");
 
         if ((! Cache::tags('events')->has($cacheKey)) || ($cacheForceUpdate == '1')) {

@@ -115,7 +115,7 @@ class BoxcastController extends Controller
 
             $data = json_decode($response->getBody()->getContents());
 
-            $expireTime = Carbon::now()->addSeconds($data->expires_in)->subMinutes(5);
+            $expireTime = now()->addSeconds($data->expires_in)->subMinutes(5);
 
             Cache::tags('boxcast')->put('token', $data, $expireTime);
         }

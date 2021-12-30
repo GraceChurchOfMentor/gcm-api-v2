@@ -22,7 +22,7 @@ class IcalController extends Controller
         $data = self::getRemoteCalendar($url);
         $data = self::fixLongLines($data);
 
-        Cache::put($id, $data, (60 * 24));
+        Cache::tags('ical')->put($id, $data, now()->addHours(24));
 
         return response($data, 200)
             ->header('Content-Type', 'text/calendar; charset=utf-8')
