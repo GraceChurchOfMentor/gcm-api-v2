@@ -1,6 +1,6 @@
 <?php
 
-class EventsTest extends TestCase
+class EventsTest extends BrowserKitTestCase
 {
     public function testRawListing()
     {
