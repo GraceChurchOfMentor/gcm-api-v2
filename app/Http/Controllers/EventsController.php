@@ -3,19 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use GuzzleHttp\Client;
 use App\Jobs\RetrieveEventCalendar;
 use App\Utils;
-use Storage;
 use Cache;
-use Log;
 use DateTime;
 use DateTimeZone;
+use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Log;
+use Storage;
 
 class EventsController extends Controller
 {
-    public function getEvents(Request $request, $featured = false) {
+    public function getEvents(Request $request, $featured = false)
+    {
         /*
             // html view options
             'show_details' => $this->get('show_details'),
@@ -67,33 +68,37 @@ class EventsController extends Controller
         return self::outputEvents($result);
     }
 
-    public function clearCache() {
+    public function clearCache()
+    {
         Cache::tags('events')->flush();
 
-        return "Events cache cleared.";
+        return 'Events cache cleared.';
     }
 
-    public function dispatchRetrieveEventCalendar() {
+    public function dispatchRetrieveEventCalendar()
+    {
         $this->dispatch(new RetrieveEventCalendar());
 
-        return "Job finished.";
+        return 'Job finished.';
     }
 
-    private function getRawListingNew() {
+    private function getRawListingNew()
+    {
         $data = json_decode(Storage::get('ccb-events-most-recent.json'));
 
         return $data;
     }
 
-    private function getRawListing($dateStart = FALSE, $dateEnd = FALSE, $timeframe = FALSE, $cacheForceUpdate = FALSE) {
+    private function getRawListing($dateStart = false, $dateEnd = false, $timeframe = false, $cacheForceUpdate = false)
+    {
         $timeframe = $timeframe ? $timeframe : config('gcm.events.defaultTimeframe');
         $dateStart = Utils::normalizeTime($dateStart);
         $dateEnd = $dateEnd ? Utils::normalizeTime($dateEnd) : Utils::normalizeTime("$dateStart $timeframe");
 
         $cacheTime = 1440;
-        $cacheKey = "events-public-calendar-listing-" . base64_encode("$dateStart$dateEnd");
+        $cacheKey = 'events-public-calendar-listing-'.base64_encode("$dateStart$dateEnd");
 
-        if (( ! Cache::tags('events')->has($cacheKey)) || ($cacheForceUpdate == "1")) {
+        if ((! Cache::tags('events')->has($cacheKey)) || ($cacheForceUpdate == '1')) {
             $client = new Client([
                 'base_uri' => config('ccb.apiEndpointUri'),
             ]);
@@ -102,13 +107,13 @@ class EventsController extends Controller
                 'auth' => [
                     config('ccb.apiUsername'),
                     config('ccb.apiPassword'),
-                    'basic'
+                    'basic',
                 ],
                 'query' => [
                     'srv' => 'public_calendar_listing',
                     'date_start' => $dateStart,
                     'date_end' => $dateEnd,
-                ]
+                ],
             ]);
 
             $data = (string) $response->getBody();
@@ -120,7 +125,8 @@ class EventsController extends Controller
         return self::formatRawListing(Cache::tags('events')->get($cacheKey));
     }
 
-    private static function formatRawListing($xml) {
+    private static function formatRawListing($xml)
+    {
         $data = simplexml_load_string($xml);
 
         $data = (object) [
@@ -136,19 +142,20 @@ class EventsController extends Controller
         return $data;
     }
 
-    private static function outputEvents($events) {
+    private static function outputEvents($events)
+    {
         // remove asterisks from featured events
-        array_walk($events->events, function(&$event) {
-            if (substr($event->event_name, 0, 1) == "*") {
-                $event->event_name = preg_replace("/^\*[\s]*/", "", $event->event_name);
-                $event->gcm_featured = "featured";
+        array_walk($events->events, function (&$event) {
+            if (substr($event->event_name, 0, 1) == '*') {
+                $event->event_name = preg_replace("/^\*[\s]*/", '', $event->event_name);
+                $event->gcm_featured = 'featured';
             }
         });
 
         // add unix epoch date strings
-        array_walk($events->events, function(&$event) {
-            $event->unix_start_time = (new DateTime($event->date . ' ' . $event->start_time, new DateTimeZone('America/New_York')))->format('U');
-            $event->unix_end_time = (new DateTime($event->date . ' ' . $event->end_time, new DateTimeZone('America/New_York')))->format('U');
+        array_walk($events->events, function (&$event) {
+            $event->unix_start_time = (new DateTime($event->date.' '.$event->start_time, new DateTimeZone('America/New_York')))->format('U');
+            $event->unix_end_time = (new DateTime($event->date.' '.$event->end_time, new DateTimeZone('America/New_York')))->format('U');
         });
 
         $events = (object) [
@@ -161,9 +168,10 @@ class EventsController extends Controller
         return response()->json($events);
     }
 
-    private static function filterFeatured($events) {
-        $events->events = array_filter($events->events, function($e) {
-            if (substr($e->event_name, 0, 1) == "*") {
+    private static function filterFeatured($events)
+    {
+        $events->events = array_filter($events->events, function ($e) {
+            if (substr($e->event_name, 0, 1) == '*') {
                 return true;
             }
 
@@ -173,23 +181,25 @@ class EventsController extends Controller
         return $events;
     }
 
-    private static function filterCount($events, $count) {
+    private static function filterCount($events, $count)
+    {
         $events->events = array_slice($events->events, 0, $count);
 
         return $events;
     }
 
-    private static function filterGroups($events, $groups) {
+    private static function filterGroups($events, $groups)
+    {
         $groups = urldecode($groups);
 
         // turn the $groups argument into an array
         if (Utils::isJson($groups)) {
             $groups = json_decode($groups);
         } elseif (is_string($groups)) {
-            $groups = [ $groups ];
+            $groups = [$groups];
         }
 
-        $events->events = array_filter($events->events, function($e) use ($groups) {
+        $events->events = array_filter($events->events, function ($e) use ($groups) {
             foreach ($groups as $g) {
                 if ($e->group_name == $g) {
                     return true;
@@ -204,13 +214,14 @@ class EventsController extends Controller
         return $events;
     }
 
-    private static function filterSearch($events, $query, $searchOperation = "all") {
+    private static function filterSearch($events, $query, $searchOperation = 'all')
+    {
         $query = urldecode($query);
 
         if (Utils::isJson($query)) {
-            $query = (object) [ "fields" => json_decode($query) ];
+            $query = (object) ['fields' => json_decode($query)];
         } elseif (is_string($query)) {
-            $query = (object) [ "all" => $query ];
+            $query = (object) ['all' => $query];
         }
 
         $events->parsed->search = $query;
@@ -218,11 +229,11 @@ class EventsController extends Controller
         if (isset($query->all)) {
             $events = self::searchAll($events, $query->all);
         } elseif (isset($query->fields)) {
-            if ($searchOperation == "any") {
-                $events->parsed->searchOperation = "any";
+            if ($searchOperation == 'any') {
+                $events->parsed->searchOperation = 'any';
                 $events = self::searchFieldsAny($events, $query->fields);
             } else {
-                $events->parsed->searchOperation = "all";
+                $events->parsed->searchOperation = 'all';
                 $events = self::searchFieldsAll($events, $query->fields);
             }
         }
@@ -230,9 +241,10 @@ class EventsController extends Controller
         return $events;
     }
 
-    private static function searchAll($events, $query) {
-        $events->events = array_filter($events->events, function($e) use ($query) {
-            $string = "";
+    private static function searchAll($events, $query)
+    {
+        $events->events = array_filter($events->events, function ($e) use ($query) {
+            $string = '';
             foreach ($e as $value) {
                 $string .= "$value ";
             }
@@ -250,10 +262,11 @@ class EventsController extends Controller
         return $events;
     }
 
-    private static function searchFieldsAll($events, $fields) {
-        $events->events = array_filter($events->events, function($e) use ($fields) {
+    private static function searchFieldsAll($events, $fields)
+    {
+        $events->events = array_filter($events->events, function ($e) use ($fields) {
             foreach ($fields as $key => $value) {
-                if ( ! isset($e->$key)) {
+                if (! isset($e->$key)) {
                     return false;
                 }
                 if (stripos($e->$key, $value) === false) {
@@ -267,8 +280,9 @@ class EventsController extends Controller
         return $events;
     }
 
-    private static function searchFieldsAny($events, $fields) {
-        $events->events = array_filter($events->events, function($e) use ($fields) {
+    private static function searchFieldsAny($events, $fields)
+    {
+        $events->events = array_filter($events->events, function ($e) use ($fields) {
             foreach ($fields as $key => $value) {
                 if (isset($e->$key)) {
                     if (stripos($e->$key, $value) !== false) {

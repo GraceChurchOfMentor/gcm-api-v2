@@ -3,38 +3,41 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use GuzzleHttp\Psr7;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
 use App\Utils;
 use Cache;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Psr7\Request;
 use Log;
 
 class BoxcastController extends Controller
 {
     public $token = false;
+
     public $client;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->token = $this->getToken();
     }
 
-    public function getCountdown($channelId = false) {
+    public function getCountdown($channelId = false)
+    {
         $this->client = new Client();
 
-        foreach (array('relevant') as $timeframe) {
+        foreach (['relevant'] as $timeframe) {
             try {
-                $baseUri = config('boxcast.apiEndpointUri') . '/account/channels/' . $channelId . '/broadcasts';
+                $baseUri = config('boxcast.apiEndpointUri').'/account/channels/'.$channelId.'/broadcasts';
                 $request = new Request('GET', $baseUri);
                 $response = $this->client->send($request, [
                     'headers' => [
-                        'Authorization' => 'Bearer ' . $this->token->access_token
+                        'Authorization' => 'Bearer '.$this->token->access_token,
                     ],
                     'query' => [
-                        'q' => "timeframe:$timeframe"
-                    ]
+                        'q' => "timeframe:$timeframe",
+                    ],
                 ]);
             } catch (ClientException $e) {
                 return response()->json([
@@ -46,7 +49,7 @@ class BoxcastController extends Controller
 
             $broadcasts = json_decode($response->getBody());
 
-            if ( ! empty($broadcasts)) {
+            if (! empty($broadcasts)) {
                 break;
             }
         }
@@ -62,7 +65,7 @@ class BoxcastController extends Controller
 
         // get the full detail for the next broadcast
         try {
-            $baseUri = config('boxcast.apiEndpointUri') . '/broadcasts/' . $broadcasts[0]->id;
+            $baseUri = config('boxcast.apiEndpointUri').'/broadcasts/'.$broadcasts[0]->id;
             $request = new Request('GET', $baseUri);
             $response = $this->client->send($request);
         } catch (ClientException $e) {
@@ -76,20 +79,21 @@ class BoxcastController extends Controller
 
         $next = json_decode($response->getBody());
 
-        if ( ! empty($next)) {
+        if (! empty($next)) {
         }
 
-        $data = (object) array(
+        $data = (object) [
             'status' => 'success',
             'details' => $next,
-        );
+        ];
 
         return response()->json($data);
     }
 
-    private function getToken() {
-        if ( ! Cache::tags('boxcast')->has('token')) {
-            $authBasicToken = base64_encode(config('boxcast.apiClientId') . ":" . config('boxcast.apiClientSecret'));
+    private function getToken()
+    {
+        if (! Cache::tags('boxcast')->has('token')) {
+            $authBasicToken = base64_encode(config('boxcast.apiClientId').':'.config('boxcast.apiClientSecret'));
 
             $this->client = new Client([
                 'base_uri' => config('boxcast.apiLoginEndpointUri'),
@@ -100,8 +104,8 @@ class BoxcastController extends Controller
                     'Authorization' => "Basic $authBasicToken",
                 ],
                 'form_params' => [
-                    'grant_type' => "client_credentials",
-                    'scope' => "owner",
+                    'grant_type' => 'client_credentials',
+                    'scope' => 'owner',
                 ],
             ]);
 
