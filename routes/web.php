@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\BoxcastController;
+use App\Http\Controllers\EventsController;
+use App\Http\Controllers\IcalController;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | Routes File
@@ -30,12 +35,12 @@ Route::middleware('web')->group(function () {
     //
 });
 
-Route::get('events/fetch', 'EventsController@dispatchRetrieveEventCalendar');
-Route::get('events/cache/clear', 'EventsController@clearCache');
-Route::get('events/{featured?}', 'EventsController@getEvents');
+Route::get('events/fetch', [EventsController::class, 'dispatchRetrieveEventCalendar']);
+Route::get('events/cache/clear', [EventsController::class, 'clearCache']);
+Route::get('events/{featured?}', [EventsController::class, 'getEvents']);
 
-Route::get('calendar/ical/get/{base64url}', 'IcalController@getCalendar');
-Route::get('calendar/ical/forget/{base64url}', 'IcalController@forgetCalendar');
+Route::get('calendar/ical/get/{base64url}', [IcalController::class, 'getCalendar']);
+Route::get('calendar/ical/forget/{base64url}', [IcalController::class, 'forgetCalendar']);
 
-Route::get('livestream/countdown/{channelId}', 'BoxcastController@getCountdown');
-Route::get('livestream/countdown', 'BoxcastController@getCountdown');
+Route::get('livestream/countdown/{channelId}', [BoxcastController::class, 'getCountdown']);
+Route::get('livestream/countdown', [BoxcastController::class, 'getCountdown']);
