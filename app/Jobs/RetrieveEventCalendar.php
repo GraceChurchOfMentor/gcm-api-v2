@@ -74,7 +74,7 @@ class RetrieveEventCalendar extends Job implements ShouldQueue
                     $event->last_updated = $updatedDate;
                 }
 
-                Cache::tags('events')->put($cacheKey, json_encode($data), $cacheMaxAge);
+                Cache::tags('events')->put($cacheKey, json_encode($data), now()->addMinutes($cacheMaxAge));
             }
 
             $data = json_decode(Cache::tags('events')->get($cacheKey));
