@@ -1,0 +1,9 @@
+name: gcm-api-v2
+recipe: laravel
+config:
+  webroot: ./public
+  php: 7.1
+  composer_version: 1.10.1
+  via: nginx
+  cache: redis
+  xdebug: true

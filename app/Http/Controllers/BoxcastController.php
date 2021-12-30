@@ -24,9 +24,9 @@ class BoxcastController extends Controller
     public function getCountdown($channelId = false) {
         $this->client = new Client();
 
-        foreach (array('current', 'preroll', 'future') as $timeframe) {
+        foreach (array('relevant') as $timeframe) {
             try {
-                $baseUri = config('boxcast.apiEndpointUri') . '/channels/' . $channelId . '/broadcasts';
+                $baseUri = config('boxcast.apiEndpointUri') . '/account/channels/' . $channelId . '/broadcasts';
                 $request = new Request('GET', $baseUri);
                 $response = $this->client->send($request, [
                     'headers' => [
