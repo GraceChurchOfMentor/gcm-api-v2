@@ -50,7 +50,6 @@ class BoxcastController extends Controller
             }
 
             $broadcasts = json_decode($response->getBody());
-            dd($broadcasts);
 
             if (! empty($broadcasts)) {
                 break;
