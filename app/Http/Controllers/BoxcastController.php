@@ -37,6 +37,8 @@ class BoxcastController extends Controller
                     ],
                     'query' => [
                         'q' => "timeframe:$timeframe",
+                        's' => '-starts_at',
+                        'l' => '5',
                     ],
                 ]);
             } catch (ClientException $e) {
@@ -48,6 +50,7 @@ class BoxcastController extends Controller
             }
 
             $broadcasts = json_decode($response->getBody());
+            dd($broadcasts);
 
             if (! empty($broadcasts)) {
                 break;
